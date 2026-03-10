@@ -1,0 +1,73 @@
+import request from '@/utils/request'
+
+export function getUsers(params) {
+  return request.get('/system/users', { params })
+}
+
+export function getUser(id) {
+  return request.get(`/system/users/${id}`)
+}
+
+export function createUser(data) {
+  return request.post('/system/users', data)
+}
+
+export function updateUser(id, data) {
+  return request.put(`/system/users/${id}`, data)
+}
+
+export function deleteUser(id) {
+  return request.delete(`/system/users/${id}`)
+}
+
+export function assignUserRole(id, data) {
+  return request.post(`/system/users/${id}/role`, data)
+}
+
+export function getRoles(params) {
+  return request.get('/system/roles', { params })
+}
+
+export function getRole(id) {
+  return request.get(`/system/roles/${id}`)
+}
+
+export function createRole(data) {
+  return request.post('/system/roles', data)
+}
+
+export function updateRole(id, data) {
+  return request.put(`/system/roles/${id}`, data)
+}
+
+export function deleteRole(id) {
+  return request.delete(`/system/roles/${id}`)
+}
+
+export function getRolePermissions(id) {
+  return request.get(`/system/roles/${id}/permissions`)
+}
+
+export function assignPermissions(id, data) {
+  return request.post(`/system/roles/${id}/permissions`, data)
+}
+
+export function getPermissions(params) {
+  return request.get('/system/permissions', { params })
+}
+
+export function getPermission(id) {
+  return request.get(`/system/permissions/${id}`)
+}
+
+export function createPermission(data) {
+  return request.post('/system/permissions', data)
+}
+
+export function updatePermission(id, data) {
+  return request.put(`/system/permissions/${id}`, data)
+}
+
+export function deletePermission(id) {
+  return request.delete(`/system/permissions/${id}`)
+}
