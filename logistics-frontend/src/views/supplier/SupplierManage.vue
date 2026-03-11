@@ -65,8 +65,20 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="formData.email" placeholder="请输入邮箱" />
         </el-form-item>
+        <el-form-item label="开户行" prop="bank">
+          <el-input v-model="formData.bank" placeholder="请输入开户行" />
+        </el-form-item>
         <el-form-item label="银行账号" prop="bankAccount">
           <el-input v-model="formData.bankAccount" placeholder="请输入银行账号" />
+        </el-form-item>
+        <el-form-item label="传真" prop="fax">
+          <el-input v-model="formData.fax" placeholder="请输入传真" />
+        </el-form-item>
+        <el-form-item label="法人" prop="legalPerson">
+          <el-input v-model="formData.legalPerson" placeholder="请输入法人" />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="formData.remark" type="textarea" rows="2" placeholder="请输入备注" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -100,12 +112,18 @@ const formData = reactive({
   address: '',
   zipCode: '',
   email: '',
-  bankAccount: ''
+  bank: '',
+  bankAccount: '',
+  fax: '',
+  legalPerson: '',
+  remark: ''
 })
 
 const rules = {
   name: [{ required: true, message: '请输入供应商名称', trigger: 'blur' }],
-  contactPerson: [{ required: true, message: '请输入联系人', trigger: 'blur' }]
+  contactPerson: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+  bank: [{ required: true, message: '请输入开户行', trigger: 'blur' }],
+  bankAccount: [{ required: true, message: '请输入银行账号', trigger: 'blur' }]
 }
 
 const fetchData = async () => {
@@ -124,7 +142,8 @@ const fetchData = async () => {
 const resetForm = () => {
   Object.assign(formData, {
     id: null, name: '', contactPerson: '', phone: '', mobile: '',
-    address: '', zipCode: '', email: '', bankAccount: ''
+    address: '', zipCode: '', email: '', bank: '', bankAccount: '',
+    fax: '', legalPerson: '', remark: ''
   })
 }
 
@@ -161,16 +180,23 @@ const handleDelete = (id) => {
 }
 
 const handleSubmit = async () => {
-  await formRef.value.validate()
-  if (formData.id) {
-    await updateSupplier(formData.id, formData)
-    ElMessage.success('更新成功')
-  } else {
-    await createSupplier(formData)
-    ElMessage.success('新增成功')
+  try {
+    await formRef.value.validate()
+    if (formData.id) {
+      await updateSupplier(formData.id, formData)
+      ElMessage.success('更新成功')
+    } else {
+      await createSupplier(formData)
+      ElMessage.success('新增成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    console.error(e)
+    if (e && e.message) {
+      ElMessage.error(e.message)
+    }
   }
-  dialogVisible.value = false
-  fetchData()
 }
 
 onMounted(() => fetchData())

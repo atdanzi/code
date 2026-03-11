@@ -72,6 +72,14 @@
     <el-dialog v-model="dialogVisible" title="新增订单" width="900px" destroy-on-close>
       <el-form ref="formRef" :model="formData" :rules="rules" label-width="110px">
         <el-divider content-position="left">客户信息</el-divider>
+        <el-form-item label="订单类型" prop="orderType">
+          <el-select v-model="formData.orderType" placeholder="请选择" style="width: 200px">
+            <el-option label="新订" value="新订" />
+            <el-option label="退订" value="退订" />
+            <el-option label="换货" value="换货" />
+            <el-option label="退货" value="退货" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="搜索客户">
           <el-input v-model="customerSearch" placeholder="输入姓名或手机号搜索" style="width: 300px" />
           <el-button type="primary" style="margin-left: 10px" @click="searchCustomer">搜索</el-button>
@@ -200,6 +208,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getOrders, createOrder, cancelOrder, exchangeOrder, returnOrder } from '@/api/order'
 import { getCustomers } from '@/api/customer'
 import { getProducts } from '@/api/product'
+import request from '@/utils/request'
 
 const tableData = ref([])
 const loading = ref(false)
@@ -210,6 +219,7 @@ const customerSearch = ref('')
 const productSearch = ref('')
 const customerList = ref([])
 const productList = ref([])
+const inventoryMap = ref(new Map())
 
 const queryParams = reactive({
   page: 1,
@@ -225,6 +235,7 @@ const queryParams = reactive({
 const formData = reactive({
   customerId: null,
   customerName: '',
+  orderType: '新订',
   items: [],
   receiverName: '',
   receiverPhone: '',
@@ -234,6 +245,7 @@ const formData = reactive({
 })
 
 const rules = {
+  orderType: [{ required: true, message: '请选择订单类型', trigger: 'change' }],
   receiverName: [{ required: true, message: '请输入收货人姓名', trigger: 'blur' }],
   receiverPhone: [{ required: true, message: '请输入收货人电话', trigger: 'blur' }],
   receiverAddress: [{ required: true, message: '请输入收货地址', trigger: 'blur' }],
@@ -276,7 +288,7 @@ const handleReset = () => {
 
 const handleAdd = () => {
   Object.assign(formData, {
-    customerId: null, customerName: '', items: [],
+    customerId: null, customerName: '', orderType: '新订', items: [],
     receiverName: '', receiverPhone: '', receiverAddress: '',
     requireDate: '', needInvoice: false
   })
@@ -284,6 +296,7 @@ const handleAdd = () => {
   productList.value = []
   customerSearch.value = ''
   productSearch.value = ''
+  loadInventory()
   dialogVisible.value = true
 }
 
@@ -324,20 +337,57 @@ const addToCart = (row) => {
   ElMessage.success('已添加')
 }
 
+const loadInventory = async () => {
+  try {
+    const res = await request.get('/inventory')
+    const list = res.data.records || res.data.list || res.data || []
+    inventoryMap.value = new Map(list.map(i => [i.productId, i.availableQuantity || 0]))
+  } catch (e) {
+    console.error(e)
+    inventoryMap.value = new Map()
+  }
+}
+
 const handleSubmit = async () => {
-  await formRef.value.validate()
-  if (!formData.customerId) {
-    ElMessage.warning('请选择客户')
-    return
+  try {
+    await formRef.value.validate()
+    if (!formData.customerId) {
+      ElMessage.warning('请选择客户')
+      return
+    }
+    if (!formData.items.length) {
+      ElMessage.warning('请添加商品')
+      return
+    }
+    if (!inventoryMap.value.size) {
+      await loadInventory()
+    }
+    for (const it of formData.items) {
+      const available = inventoryMap.value.get(it.productId) ?? 0
+      if (available < it.quantity) {
+        ElMessage.warning(`商品 ${it.productName} 库存不足，当前可用 ${available}，请调整数量或补货`)
+        return
+      }
+    }
+    const payload = {
+      ...formData,
+      needInvoice: formData.needInvoice ? 1 : 0,
+      items: formData.items.map(i => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        unitPrice: i.price
+      }))
+    }
+    await createOrder(payload)
+    ElMessage.success('订单创建成功')
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    console.error(e)
+    if (e && e.message) {
+      ElMessage.error(e.message)
+    }
   }
-  if (!formData.items.length) {
-    ElMessage.warning('请添加商品')
-    return
-  }
-  await createOrder(formData)
-  ElMessage.success('订单创建成功')
-  dialogVisible.value = false
-  fetchData()
 }
 
 const handleCancel = (row) => {

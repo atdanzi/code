@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 export function checkShortage(params) {
-  return request.get('/purchase/shortage', { params })
+  return request.get('/purchase/shortage-check', { params })
 }
 
 export function createPurchase(data) {

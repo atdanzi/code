@@ -81,6 +81,9 @@
             <el-option v-for="s in supplierList" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
+        <el-form-item label="生产厂商" prop="manufacturer">
+          <el-input v-model="formData.manufacturer" placeholder="请输入生产厂商" />
+        </el-form-item>
         <el-form-item label="规格" prop="spec">
           <el-input v-model="formData.spec" placeholder="请输入规格" />
         </el-form-item>
@@ -130,6 +133,7 @@ const formData = reactive({
   costPrice: 0,
   unit: '',
   supplierId: '',
+  manufacturer: '',
   spec: '',
   description: ''
 })
@@ -138,6 +142,8 @@ const rules = {
   name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
   category1Id: [{ required: true, message: '请选择一级分类', trigger: 'change' }],
   category2Id: [{ required: true, message: '请选择二级分类', trigger: 'change' }],
+  supplierId: [{ required: true, message: '请选择供应商', trigger: 'change' }],
+  manufacturer: [{ required: true, message: '请输入生产厂商', trigger: 'blur' }],
   originalPrice: [{ required: true, message: '请输入零售价', trigger: 'blur' }]
 }
 
@@ -170,7 +176,12 @@ const fetchData = async () => {
   loading.value = true
   try {
     const res = await getProducts(queryParams)
-    tableData.value = res.data.records || res.data.list || res.data || []
+    const raw = res.data.records || res.data.list || res.data || []
+    const supplierMap = new Map(supplierList.value.map(s => [s.id, s.name]))
+    tableData.value = raw.map(item => ({
+      ...item,
+      supplierName: item.supplierName || supplierMap.get(item.supplierId) || ''
+    }))
     total.value = res.data.total || 0
   } catch (e) {
     console.error(e)
@@ -181,8 +192,17 @@ const fetchData = async () => {
 
 const resetForm = () => {
   Object.assign(formData, {
-    id: null, name: '', category1Id: '', category2Id: '',
-    originalPrice: 0, costPrice: 0, unit: '', supplierId: '', spec: '', description: ''
+    id: null,
+    name: '',
+    category1Id: '',
+    category2Id: '',
+    originalPrice: 0,
+    costPrice: 0,
+    unit: '',
+    supplierId: null,
+    manufacturer: '',
+    spec: '',
+    description: ''
   })
   formCategory2List.value = []
 }
@@ -215,29 +235,38 @@ const handleEdit = async (row) => {
 }
 
 const handleDelete = (id) => {
-  ElMessageBox.confirm('确认删除该商品?', '提示', { type: 'warning' }).then(async () => {
-    await deleteProduct(id)
-    ElMessage.success('删除成功')
-    fetchData()
-  }).catch(() => {})
+  ElMessageBox.confirm('确认删除该商品吗？', '提示', { type: 'warning' })
+    .then(async () => {
+      await deleteProduct(id)
+      ElMessage.success('删除成功')
+      fetchData()
+    })
+    .catch(() => {})
 }
 
 const handleSubmit = async () => {
-  await formRef.value.validate()
-  if (formData.id) {
-    await updateProduct(formData.id, formData)
-    ElMessage.success('更新成功')
-  } else {
-    await createProduct(formData)
-    ElMessage.success('新增成功')
+  try {
+    await formRef.value.validate()
+    if (formData.id) {
+      await updateProduct(formData.id, formData)
+      ElMessage.success('更新成功')
+    } else {
+      await createProduct(formData)
+      ElMessage.success('新增成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    console.error(e)
+    if (e && e.message) {
+      ElMessage.error(e.message)
+    }
   }
-  dialogVisible.value = false
-  fetchData()
 }
 
-onMounted(() => {
-  fetchCategory1()
-  fetchSuppliers()
+onMounted(async () => {
+  await fetchCategory1()
+  await fetchSuppliers()
   fetchData()
 })
 </script>
