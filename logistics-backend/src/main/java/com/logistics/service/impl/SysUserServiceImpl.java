@@ -16,6 +16,7 @@ import com.logistics.mapper.SysUserMapper;
 import com.logistics.mapper.SysUserRoleMapper;
 import com.logistics.service.SysUserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -23,6 +24,7 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
@@ -36,16 +38,47 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public SysUser login(String username, String password) {
         SysUser user = getOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, username));
-        if (user == null) {
+//             SysUser user1=new SysUser();
+//             user1.setUsername("admin");
+//            user1.setPassword("admin123");
+//          return user1;
+        if (user == null){
+            log.info("user为null");
             return null;
         }
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+
+//        boolean matche(String password, String getPassword) {
+//            // 1. 从完整密文中提取盐值
+//            String salt = extractSalt(encodedPassword);  // 得到 "N.ZOn9G6LjCTGYCbMtKNfu"
+//
+//            // 2. 用相同的盐值和算法重新加密明文
+//            String newHash = bcryptHash(rawPassword, salt);  // 使用相同的盐值
+//
+//            // 3. 比较新生成的哈希与原始哈希
+//            return newHash.equals(extractHash(encodedPassword));
+//        }
+
+        log.info("password:{}",password);
+        log.info("getpassword:{}",user.getPassword());
+//        passwordEncoder.matches(password,user.getPassword());
+
+//     if (!passwordEncoder.matches(password, user.getPassword())) {
+//         log.info("密码不错误");
+//         return user;
+//     }
+
+        if(!password.equals(user.getPassword())){
+            log.info("密码错误");
             return null;
         }
-        if (user.getStatus() != null && user.getStatus() == 0) {
+
+
+        if(user.getStatus()!= null && user.getStatus() == 0) {
+            log.info("权限不足");
             return null;
         }
         return user;
+
     }
 
     @Override
@@ -86,4 +119,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         result.getRecords().forEach(u -> u.setPassword(null));
         return result;
     }
+
+
 }
