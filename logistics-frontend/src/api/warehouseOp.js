@@ -35,3 +35,7 @@ export function getTransferOrders(params) {
 export function getPurchaseOrders(params) {
   return request.get('/warehouse-op/purchase-orders', { params })
 }
+
+export function getPurchaseOrderDetail(id) {
+  return request.get(`/warehouse-op/purchase-orders/${id}`)
+}

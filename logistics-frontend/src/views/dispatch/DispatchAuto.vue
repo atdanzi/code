@@ -1,11 +1,7 @@
 <template>
-  <div class="page-container">
-    <h3>自动调度</h3>
-    <el-card>
-      <p>自动调度页面 - 待开发</p>
-    </el-card>
-  </div>
+  <AutoDispatch />
 </template>
 
 <script setup>
+import AutoDispatch from './AutoDispatch.vue'
 </script>

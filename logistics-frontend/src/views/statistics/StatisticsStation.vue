@@ -1,11 +1,7 @@
 <template>
-  <div class="page-container">
-    <h3>分站配送</h3>
-    <el-card>
-      <p>分站配送页面 - 待开发</p>
-    </el-card>
-  </div>
+  <StationStats />
 </template>
 
 <script setup>
+import StationStats from './StationStats.vue'
 </script>

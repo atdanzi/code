@@ -1,11 +1,7 @@
 <template>
-  <div class="page-container">
-    <h3>回执录入</h3>
-    <el-card>
-      <p>回执录入页面 - 待开发</p>
-    </el-card>
-  </div>
+  <ReceiptEntry />
 </template>
 
 <script setup>
+import ReceiptEntry from './ReceiptEntry.vue'
 </script>
